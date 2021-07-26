@@ -346,12 +346,13 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
     // 判断是否运行向前的动画，否则回弹
     if (isSwipeLeft || isSwipeRight) {
-      _runChangeOrderAnimation();
+
       if (isSwipeLeft) {
         _swipeInfoList.add(SwipeInfo(_frontCardIndex, SwipeDirection.Left));
       } else {
         _swipeInfoList.add(SwipeInfo(_frontCardIndex, SwipeDirection.Right));
       }
+      _runChangeOrderAnimation();
     } else {
       _runReboundAnimation(details.velocity.pixelsPerSecond, size);
     }
