@@ -10,10 +10,13 @@ import 'swip_info.dart';
 typedef ForwardCallback(int index, SwipeInfo info);
 typedef BackCallback(int index, SwipeInfo info);
 typedef EndCallback();
+typedef OnDragCard(double interpolation,SwipeDirection judgment);
 
 /// card list
 class TCard extends StatefulWidget {
-  static const radiusFullSize = 12.0; //The radius alignment of top card from which the middle card's size will be blown to full
+  final radiusFullSize = 12.0; //The radius alignment of top card from which the middle card's size will be blown to full
+
+  final double limit = 10.0;
 
   final Size size;
 
@@ -35,12 +38,17 @@ class TCard extends StatefulWidget {
   /// How long does it have to wait until the next slide is sliable? less is quicker. 100 is fast enough. 500 is a bit slow.
   final int delaySlideFor;
 
+  /// A callback when the card is being dragged, with the current judgment (right,left or none),
+  /// and interpolation which is a number between 0 and 1, equals to 0 when the card is centered, 1 when it's all the way to the right/left
+  final OnDragCard? onDragCard;
+
   const TCard({
     required this.cards,
     this.controller,
     this.onForward,
     this.onBack,
     this.onEnd,
+    this.onDragCard,
     this.lockYAxis = false,
     this.slideSpeed = 20,
     this.delaySlideFor = 500,
@@ -115,10 +123,14 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
     }
   }
 
+  double calculateXInterpolation(){
+    return min(1,_frontCardAlignment.x.abs()/widget.limit);
+  }
+
   double calculateMiddleInterpolation(){
   double radius = sqrt(pow(_frontCardAlignment.x,2)+pow(_frontCardAlignment.y,2));
-  radius = min(radius,TCard.radiusFullSize);
-  double interpolate = radius / TCard.radiusFullSize;
+  radius = min(radius,widget.radiusFullSize);
+  double interpolate = radius / widget.radiusFullSize;
   return interpolate;
   }
 
@@ -287,16 +299,38 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   }
 
   // 判断是否进行动画
+
+  SwipeDirection _judge(
+
+      ){
+     if(_frontCardAlignment.x < -widget.limit) {return SwipeDirection.Left;}
+
+     if(_frontCardAlignment.x > widget.limit) {return SwipeDirection.Right;}
+
+     return SwipeDirection.None;
+  }
+
+  SwipeDirection _weakJudge(
+
+      ){
+    if(_frontCardAlignment.x < 0) {return SwipeDirection.Left;}
+
+    if(_frontCardAlignment.x > 0) {return SwipeDirection.Right;}
+
+    return SwipeDirection.None;
+  }
+
+
+
+
   void _judgeRunAnimation(DragEndDetails details, Size size) {
     // 卡片横轴距离限制
-    final double limit = 10.0;
-    final bool isSwipeLeft = _frontCardAlignment.x < -limit;
-    final bool isSwipeRight = _frontCardAlignment.x > limit;
+    SwipeDirection judgedDirection = _judge();
 
     // 判断是否运行向前的动画，否则回弹
-    if (isSwipeLeft || isSwipeRight) {
+    if (judgedDirection == SwipeDirection.Left || judgedDirection == SwipeDirection.Right) {
 
-      if (isSwipeLeft) {
+      if (judgedDirection == SwipeDirection.Left) {
         _swipeInfoList.add(SwipeInfo(_frontCardIndex, SwipeDirection.Left));
       } else {
         _swipeInfoList.add(SwipeInfo(_frontCardIndex, SwipeDirection.Right));
@@ -311,15 +345,29 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   void didChangeDependencies() {
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
-    print('TCARD CHANGE DEPENDENCIES');
+  }
+
+
+  static _sameLists(List<Widget> l1,List<Widget> l2){
+    if(l1.length!=l2.length){return false;}
+    for(int index=0; index<l1.length; index++){
+      if(l1[index].key!=l2[index].key){
+        return false;
+      }
+    }
+    return true;
   }
 
   @override
   void didUpdateWidget(covariant TCard oldWidget) {
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
+
+
+
+    if(!_sameLists(oldWidget.cards,widget.cards)){
     _stop();
-    reset(cards:widget.cards);
+    reset(cards:widget.cards);}
   }
 
   @override
@@ -328,7 +376,6 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
     // 初始化所有传入的卡片
     _cards.addAll(widget.cards);
-    print('at Tcard state added ${widget.cards.length}');
 
     // 绑定控制器
     if (widget.controller != null && widget.controller is TCardController) {
@@ -405,16 +452,22 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
 
                         onPanDown: (DragDownDetails details) {
                           _stop();
+                          if(widget.onDragCard!=null){
+                            widget.onDragCard!(calculateXInterpolation(),_weakJudge());
+                          }
                         },
                         onPanUpdate: (DragUpdateDetails details) {
                           _updateFrontCardAlignment(details, size);
-                          var radius = sqrt(pow(_frontCardAlignment.x,2)+pow(_frontCardAlignment.y,2));
-                          print(radius);
+                          if(widget.onDragCard!=null){
+                            widget.onDragCard!(calculateXInterpolation(),_weakJudge());
+                          }
+
                         },
                         onPanEnd: (DragEndDetails details) {
                           _judgeRunAnimation(details, size);
-                          var radius = sqrt(pow(_frontCardAlignment.x,2)+pow(_frontCardAlignment.y,2));
-                          print(radius);
+                          if(widget.onDragCard!=null){
+                            widget.onDragCard!(calculateXInterpolation(),_weakJudge());
+                          }
                         },
                       ),
                     )
