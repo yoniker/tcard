@@ -76,8 +76,8 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   Widget _frontCard(BoxConstraints constraints) {
     Widget child =
         _frontCardIndex < _cards.length ? _cards[_frontCardIndex] : Container();
-    bool forward = _cardChangeController.status == AnimationStatus.forward;
-    bool reverse = _cardReverseController.status == AnimationStatus.forward;
+    bool forward = _cardChangeController.status == AnimationStatus.forward && _frontCardIndex<_swipeInfoList.length;
+    bool reverse = _cardReverseController.status == AnimationStatus.forward && _frontCardIndex<_swipeInfoList.length;
 
     Widget rotate = Transform.rotate(
       angle: (math.pi / 180.0) * _frontCardRotation,
@@ -269,7 +269,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
     _resetFrontCard();
     if (widget.onForward != null && widget.onForward is Function) {
       widget.onForward!(
-        _frontCardIndex,
+        _frontCardIndex-1,
         _swipeInfoList[_frontCardIndex - 1],
       );
     }
@@ -359,11 +359,27 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
   }
 
   @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    print('TCARD CHANGE DEPENDENCIES');
+  }
+
+  @override
+  void didUpdateWidget(covariant TCard oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+    _stop();
+    reset(cards:widget.cards);
+  }
+
+  @override
   void initState() {
     super.initState();
 
     // 初始化所有传入的卡片
     _cards.addAll(widget.cards);
+    print('at Tcard state added ${widget.cards.length}');
 
     // 绑定控制器
     if (widget.controller != null && widget.controller is TCardController) {
