@@ -143,6 +143,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
           size: CardAnimations.middleCardToFrontSizeAnimation(
             _cardChangeController,
             constraints,
+            _frontCardAlignment
           ).value,
           child: child,
         ),
@@ -185,7 +186,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
           _cardChangeController,
         ).value,
         child: SizedBox.fromSize(
-          size: CardAnimations.backCardSizeAnimation(
+          size: CardAnimations.backCardToMiddleSizeAnimation(
             _cardChangeController,
             constraints,
           ).value,

@@ -84,9 +84,10 @@ class CardAnimations {
   static Animation<Size?> middleCardToFrontSizeAnimation(
     AnimationController parent,
     BoxConstraints constraints,
+    Alignment topCardAlignment
   ) {
     return SizeTween(
-      begin: CardSizes.middle(constraints),
+      begin: CardSizes.middleSizeFromTopCardAlignment(constraints,topCardAlignment),
       end: CardSizes.top(constraints),
     ).animate(
       CurvedAnimation(
@@ -112,7 +113,7 @@ class CardAnimations {
   }
 
   /// 最后面卡片尺寸变换动画
-  static Animation<Size?> backCardSizeAnimation(
+  static Animation<Size?> backCardToMiddleSizeAnimation(
     AnimationController parent,
     BoxConstraints constraints,
   ) {
