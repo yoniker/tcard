@@ -1,27 +1,44 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'swip_info.dart';
 
 /// Card Sizes
 class CardSizes {
-  static Size front(BoxConstraints constraints) {
+  static const radiusFullSize = 12.0; //The radius alignment of top card from which the middle card's size will be blown to full
+  static Size top(BoxConstraints constraints) {
     return Size(constraints.maxWidth * 0.9, constraints.maxHeight * 0.9);
   }
 
   static Size middle(BoxConstraints constraints) {
-    return Size(constraints.maxWidth * 0.85, constraints.maxHeight * 0.9);
+    return Size(constraints.maxWidth * 0.8, constraints.maxHeight * 0.8);
   }
+  
+  
 
   static Size back(BoxConstraints constraints) {
-    return Size(constraints.maxWidth * 0.8, constraints.maxHeight * .9);
+    return Size(constraints.maxWidth * 0.7, constraints.maxHeight * .7);
+  }
+  
+  static Size middleSizeFromTopCardAlignment(BoxConstraints constraints,Alignment topCardAlignment){
+    double radius = sqrt(pow(topCardAlignment.x,2)+pow(topCardAlignment.y,2));
+    radius = min(radius,radiusFullSize);
+    double interpolate = radius/radiusFullSize;
+    Size middleSize = middle(constraints);
+    Size topSize = top(constraints);
+    return Size((1-interpolate) * middleSize.width + interpolate * topSize.width,(1-interpolate) * middleSize.height + interpolate * topSize.height);
+
+
+    
   }
 }
 
 /// Card Alignments
 class CardAlignments {
-  static Alignment front = Alignment(0.0, -0.5);
+  static Alignment front = Alignment(0.0, 0.0);
   static Alignment middle = Alignment(0.0, 0.0);
-  static Alignment back = Alignment(0.0, 0.5);
+  static Alignment back = Alignment(0.0, 0.0);
 }
 
 /// Card Forward Animations
@@ -30,12 +47,12 @@ class CardAnimations {
   static Animation<Alignment> frontCardDisappearAnimation(
     AnimationController parent,
     Alignment beginAlignment,
-    SwipInfo info,
+    SwipeInfo info,
   ) {
     return AlignmentTween(
       begin: beginAlignment,
       end: Alignment(
-        info.direction == SwipDirection.Left
+        info.direction == SwipeDirection.Left
             ? beginAlignment.x - 30.0
             : beginAlignment.x + 30.0,
         0.0,
@@ -49,7 +66,7 @@ class CardAnimations {
   }
 
   /// 中间卡片位置变换动画
-  static Animation<Alignment> middleCardAlignmentAnimation(
+  static Animation<Alignment> middleCardToFrontAlignmentAnimation(
     AnimationController parent,
   ) {
     return AlignmentTween(
@@ -64,13 +81,13 @@ class CardAnimations {
   }
 
   /// 中间卡片尺寸变换动画
-  static Animation<Size?> middleCardSizeAnimation(
+  static Animation<Size?> middleCardToFrontSizeAnimation(
     AnimationController parent,
     BoxConstraints constraints,
   ) {
     return SizeTween(
       begin: CardSizes.middle(constraints),
-      end: CardSizes.front(constraints),
+      end: CardSizes.top(constraints),
     ).animate(
       CurvedAnimation(
         parent: parent,
@@ -117,11 +134,11 @@ class CardReverseAnimations {
   static Animation<Alignment> frontCardShowAnimation(
     AnimationController parent,
     Alignment endAlignment,
-    SwipInfo info,
+    SwipeInfo info,
   ) {
     return AlignmentTween(
       begin: Alignment(
-        info.direction == SwipDirection.Left
+        info.direction == SwipeDirection.Left
             ? endAlignment.x - 30.0
             : endAlignment.x + 30.0,
         0.0,
@@ -136,7 +153,7 @@ class CardReverseAnimations {
   }
 
   /// 中间卡片位置变换动画
-  static Animation<Alignment> middleCardAlignmentAnimation(
+  static Animation<Alignment> topToMiddleCardAlignmentAnimation(
     AnimationController parent,
   ) {
     return AlignmentTween(
@@ -151,12 +168,12 @@ class CardReverseAnimations {
   }
 
   /// 中间卡片尺寸变换动画
-  static Animation<Size?> middleCardSizeAnimation(
+  static Animation<Size?> topToMiddleCardSizeAnimation(
     AnimationController parent,
     BoxConstraints constraints,
   ) {
     return SizeTween(
-      begin: CardSizes.front(constraints),
+      begin: CardSizes.top(constraints),
       end: CardSizes.middle(constraints),
     ).animate(
       CurvedAnimation(
