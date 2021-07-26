@@ -6,9 +6,8 @@ import 'swip_info.dart';
 
 /// Card Sizes
 class CardSizes {
-  static const radiusFullSize = 12.0; //The radius alignment of top card from which the middle card's size will be blown to full
   static Size top(BoxConstraints constraints) {
-    return Size(constraints.maxWidth * 0.9, constraints.maxHeight * 0.9);
+    return Size(constraints.maxWidth * 0.95, constraints.maxHeight * 0.95);
   }
 
   static Size middle(BoxConstraints constraints) {
@@ -21,10 +20,8 @@ class CardSizes {
     return Size(constraints.maxWidth * 0.7, constraints.maxHeight * .7);
   }
   
-  static Size middleSizeFromTopCardAlignment(BoxConstraints constraints,Alignment topCardAlignment){
-    double radius = sqrt(pow(topCardAlignment.x,2)+pow(topCardAlignment.y,2));
-    radius = min(radius,radiusFullSize);
-    double interpolate = radius/radiusFullSize;
+  static Size middleSizeInterpolateTopSize(BoxConstraints constraints,double interpolate){
+    
     Size middleSize = middle(constraints);
     Size topSize = top(constraints);
     return Size((1-interpolate) * middleSize.width + interpolate * topSize.width,(1-interpolate) * middleSize.height + interpolate * topSize.height);
@@ -80,22 +77,7 @@ class CardAnimations {
     );
   }
 
-  /// 中间卡片尺寸变换动画
-  static Animation<Size?> middleCardToFrontSizeAnimation(
-    AnimationController parent,
-    BoxConstraints constraints,
-    Alignment topCardAlignment
-  ) {
-    return SizeTween(
-      begin: CardSizes.middleSizeFromTopCardAlignment(constraints,topCardAlignment),
-      end: CardSizes.top(constraints),
-    ).animate(
-      CurvedAnimation(
-        parent: parent,
-        curve: Interval(0.2, 0.5, curve: Curves.easeIn),
-      ),
-    );
-  }
+
 
   /// 最后面卡片位置变换动画
   static Animation<Alignment> backCardAlignmentAnimation(

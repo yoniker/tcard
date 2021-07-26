@@ -13,6 +13,8 @@ typedef EndCallback();
 
 /// card list
 class TCard extends StatefulWidget {
+  static const radiusFullSize = 12.0; //The radius alignment of top card from which the middle card's size will be blown to full
+
   final Size size;
 
   final List<Widget> cards;
@@ -113,87 +115,34 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
     }
   }
 
+  double calculateMiddleInterpolation(){
+  double radius = sqrt(pow(_frontCardAlignment.x,2)+pow(_frontCardAlignment.y,2));
+  radius = min(radius,TCard.radiusFullSize);
+  double interpolate = radius / TCard.radiusFullSize;
+  return interpolate;
+  }
+
   // 中间的卡片
   Widget _middleCard(BoxConstraints constraints) {
     Widget child = _frontCardIndex < _cards.length - 1
         ? _cards[_frontCardIndex + 1]
         : Container();
-    bool forward = _cardChangeController.status == AnimationStatus.forward;
-    bool reverse = _cardReverseController.status == AnimationStatus.forward;
-
-    if (reverse) {
-      return Align(
-        alignment: CardReverseAnimations.topToMiddleCardAlignmentAnimation(
-          _cardReverseController,
-        ).value,
-        child: SizedBox.fromSize(
-          size: CardReverseAnimations.topToMiddleCardSizeAnimation(
-            _cardReverseController,
-            constraints,
-          ).value,
-          child: child,
-        ),
-      );
-    } else if (forward) {
-      return Align(
-        alignment: CardAnimations.middleCardToFrontAlignmentAnimation(
-          _cardChangeController,
-        ).value,
-        child: SizedBox.fromSize(
-          size: CardAnimations.middleCardToFrontSizeAnimation(
-            _cardChangeController,
-            constraints,
-            _frontCardAlignment
-          ).value,
-          child: child,
-        ),
-      );
-    } else {
       return Align(
         alignment: CardAlignments.middle,
         child: SizedBox.fromSize(
-          size: CardSizes.middleSizeFromTopCardAlignment(constraints,_frontCardAlignment),
+          size: CardSizes.middleSizeInterpolateTopSize(constraints,calculateMiddleInterpolation()),
           child: child,
         ),
       );
     }
-  }
+
 
   // 后面的卡片
   Widget _backCard(BoxConstraints constraints) {
     Widget child = _frontCardIndex < _cards.length - 2
         ? _cards[_frontCardIndex + 2]
         : Container();
-    bool forward = _cardChangeController.status == AnimationStatus.forward;
-    bool reverse = _cardReverseController.status == AnimationStatus.forward;
 
-    if (reverse) {
-      return Align(
-        alignment: CardReverseAnimations.backCardAlignmentAnimation(
-          _cardReverseController,
-        ).value,
-        child: SizedBox.fromSize(
-          size: CardReverseAnimations.backCardSizeAnimation(
-            _cardReverseController,
-            constraints,
-          ).value,
-          child: child,
-        ),
-      );
-    } else if (forward) {
-      return Align(
-        alignment: CardAnimations.backCardAlignmentAnimation(
-          _cardChangeController,
-        ).value,
-        child: SizedBox.fromSize(
-          size: CardAnimations.backCardToMiddleSizeAnimation(
-            _cardChangeController,
-            constraints,
-          ).value,
-          child: child,
-        ),
-      );
-    } else {
       return Align(
         alignment: CardAlignments.back,
         child: SizedBox.fromSize(
@@ -202,7 +151,7 @@ class TCardState extends State<TCard> with TickerProviderStateMixin {
         ),
       );
     }
-  }
+
 
   // 判断是否在进行动画
   bool _isAnimating() {
